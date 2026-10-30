@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickNotes App</title>
+    
+    <!-- CSS STYLING -->
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #4a90e2;
+            --danger-color: #e74c3c;
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1e1e24;
+            --card-bg: #2a2a32;
+            --text-color: #f4f7f6;
+            --primary-color: #357abd;
+            --border-color: #444450;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .theme-btn {
+            background: none;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: 2px solid var(--primary-color);
+        }
+
+        .add-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .add-btn:hover {
+            opacity: 0.9;
+        }
+
+        .notes-list {
+            list-style: none;
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            border-left: 5px solid var(--primary-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HTML STRUCTURE -->
+    <div class="app-container">
+        <header>
+            <h1>QuickNotes</h1>
+            <button class="theme-btn" id="themeToggle">Dark Mode</button>
+        </header>
+
+        <div class="input-section">
+            <input type="text" id="noteInput" placeholder="Write a note...">
+            <button class="add-btn" id="addBtn">Add</button>
+        </div>
+
+        <ul class="notes-list" id="notesList"></ul>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const noteInput = document.getElementById('noteInput');
+        const addBtn = document.getElementById('addBtn');
+        const notesList = document.getElementById('notesList');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Load saved notes and theme from LocalStorage on startup
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        function init() {
+            // Apply theme
+            if (isDarkMode) {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = 'Light Mode';
+            }
+            renderNotes();
+        }
+
+        // Render notes to the screen
+        function renderNotes() {
+            notesList.innerHTML = '';
+            notes.forEach((note, index) => {
+                const li = document.createElement('li');
+                li.className = 'note-item';
+                li.innerHTML = `
+                    <span>${note}</span>
+                    <button class="delete-btn" onclick="deleteNote(${index})">Delete</button>
+                `;
+                notesList.appendChild(li);
+            });
+        }
+
+        // Add a new note
+        function addNote() {
+            const noteText = noteInput.value.trim();
+            if (noteText === '') return;
+
+            notes.push(noteText);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            noteInput.value = '';
+            renderNotes();
+        }
+
+        // Delete a note
+        function deleteNote(index) {
+            notes.splice(index, 1);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+
+        // Toggle dark/light theme
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = 'Light Mode';
+            } else {
+                document.body.removeAttribute('data-theme');
+                themeToggle.textContent = 'Dark Mode';
+            }
+            localStorage.setItem('darkMode', isDarkMode);
+        });
+
+        // Event Listeners for adding notes
+        addBtn.addEventListener('click', addNote);
+        noteInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNote();
+        });
+
+        // Run application
+        init();
+    </script>
+</body>
+</html>
